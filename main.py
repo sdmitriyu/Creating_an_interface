@@ -43,6 +43,10 @@ class DrawingApp:
         save_button.pack(side=tk.LEFT)
 
         self.erase_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
+
+        # Привязка правой кнопки мыши к методу pick_color
+        self.canvas.bind('<Button-3>', self.pick_color)
+
         self.erase_button.pack(side=tk.LEFT)
 
         self.brush_size = tk.IntVar(value=1)
@@ -52,6 +56,11 @@ class DrawingApp:
 
         self.brush_size_scale = tk.Scale(control_frame, from_=1, to=10, orient=tk.HORIZONTAL)
         self.brush_size_scale.pack(side=tk.LEFT)
+
+    def pick_color(self, event):
+        x, y = event.x, event.y
+        rgb = self.image.getpixel((x, y))
+        self.pen_color = '#{:02x}{:02x}{:02x}'.format(*rgb)
 
     def use_eraser(self):
         """Переключение на ластик, который рисует цветом фона."""
