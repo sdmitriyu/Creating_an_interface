@@ -9,6 +9,10 @@ class DrawingApp:
         self.root = root
         self.root.title("Рисовалка с сохранением в PNG")
 
+        # Связывание горячих клавиш
+        self.root.bind('<Control-s>', self.save_image)
+        self.root.bind('<Control-c>', self.choose_color)
+
         # Создаём пиксельную основу для холста
         self.image = Image.new("RGB", (600, 400), color="white")
         self.draw = ImageDraw.Draw(self.image)
@@ -43,14 +47,13 @@ class DrawingApp:
         save_button.pack(side=tk.LEFT)
 
         self.erase_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
+        self.erase_button.pack(side=tk.LEFT)
 
         # Привязка правой кнопки мыши к методу pick_color
         self.canvas.bind('<Button-3>', self.pick_color)
 
-        self.erase_button.pack(side=tk.LEFT)
-
-        self.brush_size = tk.IntVar(value=1)
         sizes = [1, 2, 5, 10]
+        self.brush_size = tk.IntVar(value=1)
         size_menu = tk.OptionMenu(control_frame, self.brush_size, *sizes)
         size_menu.pack(side=tk.LEFT)
 
@@ -87,12 +90,13 @@ class DrawingApp:
         self.image = Image.new("RGB", (600, 400), "white")
         self.draw = ImageDraw.Draw(self.image)
 
-    def choose_color(self):
+    def choose_color(self, event=None):
         """Выбор цвета для кисти. Также отключаем ластик."""
+
         self.pen_color = colorchooser.askcolor(color=self.pen_color)[1]
         self.eraser_on = False  # Отключаем режим ластика
 
-    def save_image(self):
+    def save_image(self, event=None):
         """Сохранение изображения в PNG формате."""
         file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
         if file_path:
