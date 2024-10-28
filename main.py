@@ -21,13 +21,15 @@ class DrawingApp:
         self.canvas = tk.Canvas(root, width=600, height=400, bg='white')
         self.canvas.pack()
 
-        # Инициализируем настройки, которые пропишем позже
+        # Цвет кисти и флаг ластика
+        self.pen_color = 'black'
+        self.eraser_on = False
+
+        # Настройки интерфейса
         self.setup_ui()
 
         # Создаём кисть
         self.last_x, self.last_y = None, None
-        self.pen_color = 'black'  # Стандартный цвет кисти
-        self.eraser_on = False  # Флаг для проверки, включен ли ластик
 
         # Привязываем события мыши
         self.canvas.bind('<B1-Motion>', self.paint)
@@ -49,6 +51,10 @@ class DrawingApp:
         self.erase_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.erase_button.pack(side=tk.LEFT)
 
+        # Предварительный просмотр цвета
+        self.color_preview = tk.Label(control_frame, width=2, bg=self.pen_color)
+        self.color_preview.pack(side=tk.LEFT, padx=5)
+
         # Привязка правой кнопки мыши к методу pick_color
         self.canvas.bind('<Button-3>', self.pick_color)
 
@@ -64,18 +70,26 @@ class DrawingApp:
         x, y = event.x, event.y
         rgb = self.image.getpixel((x, y))
         self.pen_color = '#{:02x}{:02x}{:02x}'.format(*rgb)
+        self.update_color_preview()
+
+    def update_color_preview(self):
+        """Обновление цвета предварительного просмотра."""
+        self.color_preview.config(bg=self.pen_color)
 
     def use_eraser(self):
         """Переключение на ластик, который рисует цветом фона."""
-        self.pen_color = 'white'  # Цвет фона (по умолчанию белый)
+        self.pen_color = 'white'
         self.eraser_on = True
+        self.update_color_preview()
 
     def paint(self, event):
         """Отрисовка линии при движении мыши."""
         if self.last_x and self.last_y:
-            self.canvas.create_line(self.last_x, self.last_y, event.x, event.y,
-                                    width=self.brush_size.get(), fill=self.pen_color,
-                                    capstyle=tk.ROUND, smooth=tk.TRUE)
+            self.canvas.create_line(
+                self.last_x, self.last_y, event.x, event.y,
+                width=self.brush_size.get(), fill=self.pen_color,
+                capstyle=tk.ROUND, smooth=tk.TRUE
+            )
             self.draw.line([self.last_x, self.last_y, event.x, event.y], fill=self.pen_color,
                            width=self.brush_size.get())
         self.last_x, self.last_y = event.x, event.y
@@ -92,22 +106,22 @@ class DrawingApp:
 
     def choose_color(self, event=None):
         """Выбор цвета для кисти. Также отключаем ластик."""
-
-        self.pen_color = colorchooser.askcolor(color=self.pen_color)[1]
-        self.eraser_on = False  # Отключаем режим ластика
+        color = colorchooser.askcolor(color=self.pen_color)[1]
+        if color:
+            self.pen_color = color
+            self.update_color_preview()
+        self.eraser_on = False
 
     def save_image(self, event=None):
         """Сохранение изображения в PNG формате."""
-        file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
+        file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[('PNG files', '*.png')])
         if file_path:
-            if not file_path.endswith('.png'):
-                file_path += '.png'
-            self.image.save(file_path)
-            messagebox.showinfo("Информация", "Изображение успешно сохранено!")
+            self.image.save(file_path, "PNG")
 
 def main():
     root = tk.Tk()
     app = DrawingApp(root)
     root.mainloop()
 
-main()
+if __name__ == "__main__":
+    main()
