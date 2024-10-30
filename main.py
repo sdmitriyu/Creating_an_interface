@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import colorchooser, filedialog, messagebox
+from tkinter import colorchooser, filedialog, messagebox, simpledialog
 from PIL import Image, ImageDraw
 
 
@@ -65,6 +65,33 @@ class DrawingApp:
 
         self.brush_size_scale = tk.Scale(control_frame, from_=1, to=10, orient=tk.HORIZONTAL)
         self.brush_size_scale.pack(side=tk.LEFT)
+
+        self.resize_button = tk.Button(control_frame, text='Изм. разм. окна', command=self.resize_window)
+        self.resize_button.pack(side=tk.LEFT)
+
+    def resize_window(self):
+        width = simpledialog.askinteger(
+            title='Изменение ширины экрана',
+            prompt='Введите новую ширину экрана'
+        )
+        height = simpledialog.askinteger(
+            title='Изменение высоты экрана',
+            prompt='Введите новую высоту экрана'
+        )
+        try:
+            if width is not None and height is not None:
+                # Задаём название полотна
+                self.root.title("Рисовалка с сохранением в PNG")
+
+                # Создаём пиксельную основу для холста
+                self.image = Image.new("RGB", (height, width), color="white")
+                self.draw = ImageDraw.Draw(self.image)
+
+                # На основе пиксельной основы создаём сам холст
+                self.canvas.config(width=width, height=height)
+                self.canvas.delete('all')
+        except Exception:
+            print('Ещё раз нажмите кнопку изменения размера экрана и введите валидные данные')
 
     def pick_color(self, event):
         x, y = event.x, event.y
