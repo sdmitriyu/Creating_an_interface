@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox, simpledialog
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageTk
 
 
 class DrawingApp:
@@ -13,12 +13,14 @@ class DrawingApp:
         self.root.bind('<Control-s>', self.save_image)
         self.root.bind('<Control-c>', self.choose_color)
 
+        self.bg_color = 'white'
+
         # Создаём пиксельную основу для холста
-        self.image = Image.new("RGB", (600, 400), color="white")
+        self.image = Image.new("RGB", (600, 400), color=self.bg_color)
         self.draw = ImageDraw.Draw(self.image)
 
         # На основе пиксельной основы создаём сам холст
-        self.canvas = tk.Canvas(root, width=600, height=400, bg='white')
+        self.canvas = tk.Canvas(root, width=600, height=400, bg=self.bg_color)
         self.canvas.pack()
 
         # Цвет кисти и флаг ластика
@@ -51,6 +53,14 @@ class DrawingApp:
         self.erase_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.erase_button.pack(side=tk.LEFT)
 
+        # Кнопка для добавления текста
+        text_btn = tk.Button(control_frame, text='Текст', command=self.add_text)
+        text_btn.pack(side='left', padx=5)
+
+        # Кнопка для изменения фона
+        bg_btn = tk.Button(control_frame, text='Изменить фон', command=self.change_background)
+        bg_btn.pack(side='left', padx=5)
+
         # Предварительный просмотр цвета
         self.color_preview = tk.Label(control_frame, width=2, bg=self.pen_color)
         self.color_preview.pack(side=tk.LEFT, padx=5)
@@ -68,6 +78,18 @@ class DrawingApp:
 
         self.resize_button = tk.Button(control_frame, text='Изм. разм. окна', command=self.resize_window)
         self.resize_button.pack(side=tk.LEFT)
+
+    def change_background(self):
+        (r, g, b), color = colorchooser.askcolor()  # Получение RGB и шестнадцатеричного формата
+        self.bg_color = color
+        if color:
+            self.canvas.config(background=color)
+            self.image.paste(Image.new('RGB', (500, 400), (r, g, b)))
+            self.draw = ImageDraw.Draw(self.image)
+
+    def update_canvas(self):
+        self.tk_img = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, anchor='nw', image=self.tk_img)
 
     def resize_window(self):
         width = simpledialog.askinteger(
@@ -105,7 +127,7 @@ class DrawingApp:
 
     def use_eraser(self):
         """Переключение на ластик, который рисует цветом фона."""
-        self.pen_color = 'white'
+        self.pen_color = self.bg_color
         self.eraser_on = True
         self.update_color_preview()
 
@@ -144,6 +166,17 @@ class DrawingApp:
         file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[('PNG files', '*.png')])
         if file_path:
             self.image.save(file_path, "PNG")
+
+    def add_text(self):
+        self.text = simpledialog.askstring("Введите текст", "Введите текст для добавления:")
+        self.canvas.bind("<Button-1>", self.place_text)
+
+    def place_text(self, event):
+        if self.text:
+            x, y = event.x, event.y
+            self.draw.text((x, y), self.text, fill=self.pen_color)
+            self.update_canvas()
+            self.text = None
 
 def main():
     root = tk.Tk()
